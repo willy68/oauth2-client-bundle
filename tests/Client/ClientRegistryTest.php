@@ -13,7 +13,7 @@ namespace KnpU\OAuth2ClientBundle\Tests\Client;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\OAuth2ClientInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Psr\Container\ContainerInterface;
 
 class ClientRegistryTest extends TestCase
 {

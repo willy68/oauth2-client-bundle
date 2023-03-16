@@ -16,6 +16,7 @@ use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use League\OAuth2\Client\Token\AccessTokenInterface;
 use Mezzio\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -59,7 +60,7 @@ class OAuth2Client implements OAuth2ClientInterface
      *
      * @return ResponseInterface
      */
-    public function redirect(ServerRequestInterface $request, array $scopes, array $options): ResponseInterface
+    public function redirect(ServerRequestInterface $request, array $scopes = [], array $options = []): ResponseInterface
     {
         if (!empty($scopes)) {
             $options['scope'] = $scopes;
@@ -117,11 +118,11 @@ class OAuth2Client implements OAuth2ClientInterface
      * @param string $refreshToken
      * @param array $options Additional options that should be passed to the getAccessToken() of the underlying provider
      *
-     * @return AccessToken
+     * @return AccessToken|AccessTokenInterface
      *
      * @throws IdentityProviderException If token cannot be fetched
      */
-    public function refreshAccessToken(string $refreshToken, array $options = []): AccessToken
+    public function refreshAccessToken(string $refreshToken, array $options = []): AccessToken|AccessTokenInterface
     {
         return $this->provider->getAccessToken(
             'refresh_token',

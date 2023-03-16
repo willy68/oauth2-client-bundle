@@ -34,6 +34,7 @@
         "league/oauth2-facebook": "^1.1|^2.0",
         "php-di/php-di": "^7.0",
         "mezzio/mezzio-fastroute": "3.8.0",
+        "phpunit/phpunit": "^9.5",
         "phpstan/phpstan": "^0.12.100"
     },
     "scripts": {

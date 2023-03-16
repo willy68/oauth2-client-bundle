@@ -8,89 +8,83 @@
  * file that was distributed with this source code.
  */
 
-namespace KnpU\OAuth2ClientBundle\tests\Client;
+namespace KnpU\OAuth2ClientBundle\Tests\Client;
 
+use GuzzleHttp\Psr7\HttpFactory;
+use GuzzleHttp\Psr7\ServerRequest;
 use KnpU\OAuth2ClientBundle\Client\OAuth2Client;
 use KnpU\OAuth2ClientBundle\Exception\InvalidStateException;
 use KnpU\OAuth2ClientBundle\Exception\MissingAuthorizationCodeException;
+use Laminas\Stdlib\ResponseInterface;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\FacebookUser;
 use League\OAuth2\Client\Token\AccessToken;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Mezzio\Session\Session;
+use Mezzio\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 class OAuth2ClientTest extends TestCase
 {
-    private $requestStack;
-    /** @var Request */
-    private $request;
+    private $serverRequest;
     private $session;
     private $provider;
+    private HttpFactory $httpFactory;
 
     public function setup(): void
     {
-        $this->requestStack = new RequestStack();
-        $this->session = new Session(new MockArraySessionStorage());
         $this->provider = $this->createMock(AbstractProvider::class);
-
-        $this->request = new Request();
-        $this->request->setSession($this->session);
-
-        $this->requestStack->push($this->request);
+        $this->session = $this->createMock(Session::class);
+        $this->serverRequest = $this->createMock(ServerRequest::class);
+        $this->httpFactory = new HttpFactory();
     }
+
 
     public function testRedirectWithState()
     {
         $this->provider->method('getAuthorizationUrl')
             ->with(['scope' => ['scope1', 'scope2']])
-            ->willReturn('http://coolOAuthServer.com/authorize');
+            ->willReturn('https://coolOAuthServer.com/authorize');
         $this->provider->method('getState')
             ->willReturn('SOME_RANDOM_STATE');
+        $this->serverRequest->method('getAttribute')
+            ->with(SessionInterface::class)
+            ->willReturn($this->session);
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
 
-        $response = $client->redirect(['scope1', 'scope2']);
+
+        $response = $client->redirect($this->serverRequest ,['scope1', 'scope2']);
         $this->assertInstanceOf(
-            'Symfony\Component\HttpFoundation\RedirectResponse',
+            \Psr\Http\Message\ResponseInterface::class,
             $response
         );
         $this->assertEquals(
-            'http://coolOAuthServer.com/authorize',
-            $response->getTargetUrl()
+            'https://coolOAuthServer.com/authorize',
+            $response->getHeaderLine('Location')
         );
         $this->assertSame('SOME_RANDOM_STATE', $this->session->get(OAuth2Client::OAUTH2_SESSION_STATE_KEY));
     }
 
     public function testRedirectWithoutState()
     {
-        $requestStack = $this->createMock(RequestStack::class);
-
-        $requestStack->expects($this->never())
-            ->method('getCurrentRequest');
-
         $this->provider->method('getAuthorizationUrl')
             ->with([])
-            ->willReturn('http://example.com');
+            ->willReturn('https://example.com');
 
         $client = new OAuth2Client(
             $this->provider,
-            $requestStack
+            $this->httpFactory
         );
         $client->setAsStateless();
 
-        $response = $client->redirect();
+        $response = $client->redirect($this->serverRequest);
         // don't need other checks - the fact that it didn't fail
         // by asking for the request and session is enough
         $this->assertInstanceOf(
-            RedirectResponse::class,
+            ResponseInterface::class,
             $response
         );
     }
@@ -102,30 +96,32 @@ class OAuth2ClientTest extends TestCase
                 'scope' => ['scopeA'],
                 'optionA' => 'FOO',
             ])
-            ->willReturn('http://example.com');
+            ->willReturn('https://example.com');
 
         $client = new OAuth2Client(
             $this->provider,
-            new RequestStack()
+            $this->httpFactory
         );
         $client->setAsStateless();
 
         $response = $client->redirect(
+            $this->serverRequest,
             ['scopeA'],
             ['optionA' => 'FOO']
         );
         // don't need other checks - the assertion above when
         // mocking getAuthorizationUrl is enough
         $this->assertInstanceOf(
-            RedirectResponse::class,
+            \Psr\Http\Message\ResponseInterface::class,
             $response
         );
     }
 
     public function testGetAccessToken()
     {
-        $this->request->query->set('state', 'THE_STATE');
-        $this->request->query->set('code', 'CODE_ABC');
+        $request = $this->serverRequest
+            ->withQueryParams(['state' => 'THE_STATE'])
+            ->withQueryParams(['code' => 'CODE_ABC']);
 
         $this->session->set(OAuth2Client::OAUTH2_SESSION_STATE_KEY, 'THE_STATE');
 
@@ -136,15 +132,16 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
-        $this->assertSame($expectedToken, $client->getAccessToken());
+        $this->assertSame($expectedToken, $client->getAccessToken($this->serverRequest));
     }
 
     public function testGetAccessTokenWithOptions()
     {
-        $this->request->query->set('state', 'THE_STATE');
-        $this->request->query->set('code', 'CODE_ABC');
+        $request = $this->serverRequest
+            ->withQueryParams(['state' => 'THE_STATE'])
+            ->withQueryParams(['code' => 'CODE_ABC']);
 
         $this->session->set(OAuth2Client::OAUTH2_SESSION_STATE_KEY, 'THE_STATE');
 
@@ -155,15 +152,16 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
-        $actualToken = $client->getAccessToken(['redirect_uri' => 'https://some.url']);
+        $actualToken = $client->getAccessToken($this->serverRequest, ['redirect_uri' => 'https://some.url']);
         $this->assertSame($expectedToken, $actualToken);
     }
 
     public function testGetAccessTokenFromPOST()
     {
-        $this->request->request->set('code', 'CODE_ABC');
+        $request = $this->serverRequest
+            ->withQueryParams(['state' => 'THE_STATE']);
 
         $expectedToken = new AccessToken(['access_token' => 'foo']);
         $this->provider->method('getAccessToken')
@@ -172,10 +170,10 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
         $client->setAsStateless();
-        $this->assertSame($expectedToken, $client->getAccessToken());
+        $this->assertSame($expectedToken, $client->getAccessToken($this->serverRequest));
     }
 
     public function testRefreshAccessToken()
@@ -192,7 +190,7 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
         $actualToken = $client->refreshAccessToken($existingToken->getRefreshToken());
         $this->assertSame($expectedToken, $actualToken);
@@ -212,7 +210,7 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
         $actualToken = $client->refreshAccessToken($existingToken->getRefreshToken(), ['redirect_uri' => 'https://some.url']);
         $this->assertSame($expectedToken, $actualToken);
@@ -221,33 +219,33 @@ class OAuth2ClientTest extends TestCase
     public function testGetAccessTokenThrowsInvalidStateException()
     {
         $this->expectException(InvalidStateException::class);
-        $this->request->query->set('state', 'ACTUAL_STATE');
+        $request = $this->serverRequest->withQueryParams(['state' => 'THE_STATE']);
         $this->session->set(OAuth2Client::OAUTH2_SESSION_STATE_KEY, 'OTHER_STATE');
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
-        $client->getAccessToken();
+        $client->getAccessToken($request);
     }
 
     public function testGetAccessTokenThrowsMissingAuthCodeException()
     {
         $this->expectException(MissingAuthorizationCodeException::class);
-        $this->request->query->set('state', 'ACTUAL_STATE');
+        $request = $this->serverRequest->withQueryParams(['state' => 'ACTUAL_STATE']);
         $this->session->set(OAuth2Client::OAUTH2_SESSION_STATE_KEY, 'ACTUAL_STATE');
 
         // don't set a code query parameter
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
-        $client->getAccessToken();
+        $client->getAccessToken($request);
     }
 
     public function testFetchUser()
     {
-        $this->request->request->set('code', 'CODE_ABC');
+        $request = $this->serverRequest->withQueryParams(['code' => 'CODE_ABC']);
 
         $expectedToken = new AccessToken(['access_token' => 'expected']);
         $this->provider->method('getAccessToken')
@@ -256,11 +254,11 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
 
         $client->setAsStateless();
-        $actualToken = $client->getAccessToken();
+        $actualToken = $client->getAccessToken($request);
 
         $resourceOwner = new FacebookUser([
             'id' => '1',
@@ -273,7 +271,7 @@ class OAuth2ClientTest extends TestCase
         $this->provider->method('getResourceOwner')
             ->with($actualToken)
             ->willReturn($resourceOwner);
-        $user = $client->fetchUser($actualToken);
+        $user = $client->fetchUser($this->serverRequest ,$actualToken);
 
         $this->assertInstanceOf(FacebookUser::class, $user);
         $this->assertEquals('testUser', $user->getName());
@@ -283,7 +281,7 @@ class OAuth2ClientTest extends TestCase
     {
         $testClient = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
 
         $result = $testClient->getOAuth2Provider();
@@ -293,40 +291,23 @@ class OAuth2ClientTest extends TestCase
 
     public function testShouldThrowExceptionOnRedirectIfNoSessionAndNotRunningStateless()
     {
-        $this->requestStack = new RequestStack();
-        $this->requestStack->push(new Request());
-
         $testClient = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
 
         $this->expectException(\LogicException::class);
-        $testClient->redirect();
+        $testClient->redirect($this->serverRequest);
     }
 
     public function testShouldThrowExceptionOnGetAccessTokenIfNoSessionAndNotRunningStateless()
     {
-        $this->requestStack = new RequestStack();
-        $this->requestStack->push(new Request());
-
         $testClient = new OAuth2Client(
             $this->provider,
-            $this->requestStack
+            $this->httpFactory
         );
 
         $this->expectException(\LogicException::class);
-        $testClient->getAccessToken();
-    }
-
-    public function testShouldThrowExceptionIfThereIsNoRequestInTheStack()
-    {
-        $testClient = new OAuth2Client(
-            $this->provider,
-            new RequestStack()
-        );
-
-        $this->expectException(\LogicException::class);
-        $testClient->getAccessToken();
+        $testClient->getAccessToken($this->serverRequest);
     }
 }

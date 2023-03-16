@@ -10,15 +10,16 @@
 
 namespace KnpU\OAuth2ClientBundle\Client;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class ClientRegistry
 {
-    /** @var ContainerInterface */
-    private $container;
+    private ContainerInterface $container;
 
-    /** @var array */
-    private $serviceMap;
+    private array $serviceMap;
 
     /**
      * ClientRegistry constructor.
@@ -35,8 +36,10 @@ class ClientRegistry
      * @param string $key
      *
      * @return OAuth2ClientInterface
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
-    public function getClient($key)
+    public function getClient(string $key): OAuth2ClientInterface
     {
         if (isset($this->serviceMap[$key])) {
             $client = $this->container->get($this->serviceMap[$key]);
@@ -55,7 +58,7 @@ class ClientRegistry
      *
      * @return array
      */
-    public function getEnabledClientKeys()
+    public function getEnabledClientKeys(): array
     {
         return array_keys($this->serviceMap);
     }

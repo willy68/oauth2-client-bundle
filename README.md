@@ -5,23 +5,13 @@ Easily integrate with an OAuth2 server (e.g. Facebook, GitHub) for:
 * "Social" authentication / login
 * "Connect with Facebook" type of functionality
 * Fetching access keys via OAuth2 to be used with an API
-* Doing OAuth2 authentication with [Symfony Custom Authenticator](https://symfonycasts.com/screencast/symfony-security)
-  (or [Guard Authenticator](https://symfonycasts.com/screencast/symfony-security) for legacy applications)
 
 This bundle integrates with [league/oauth2-client](https://oauth2-client.thephpleague.com/).
 
-## This Bundle or HWIOAuthBundle?
+## This Bundle?
 
-In addition to this bundle, another OAuth bundle exists for Symfony: [hwi/oauth-bundle](https://github.com/hwi/HWIOAuthBundle).
-You might be wondering "why are there two popular OAuth bundles?".
-
-Great question! Generally speaking, `hwi/oauth-bundle` gives you more features out-of-the-box,
-including social authentication and registration (called "connect"). But, it's also a bit harder
-to install. The `knpuniversity/oauth2-client-bundle`, takes more work to setup, but gives you
+The `knpuniversity/oauth2-client-bundle`, takes more work to setup, but gives you
 more low-level control.
-
-Not sure which to use? If you need OAuth (social) authentication & registration, try
-[hwi/oauth-bundle](https://github.com/hwi/HWIOAuthBundle). If you don't like it, come back!
 
 ## Installation
 
@@ -29,13 +19,8 @@ Install the bundle library via [Composer](https://getcomposer.org/) by
 running the following command:
 
 ```bash
-composer require knpuniversity/oauth2-client-bundle
+composer require willy68/psr-oauth2-client
 ```
-
-If you're using Symfony Flex, the bundle will be automatically enabled. For
-older apps, enable it in your `AppKernel` class.
-
-Awesome! Now, you'll want to configure a client.
 
 ## Configuring a Client
 
@@ -50,7 +35,7 @@ via Composer:
 <a name="client-downloader-table"></a>
 
 | OAuth2 Provider                                                       | How to Install                                     |
-| --------------------------------------------------------------------- | -------------------------------------------------- |
+|-----------------------------------------------------------------------|----------------------------------------------------|
 | [Amazon](https://github.com/luchianenco/oauth2-amazon)                | composer require luchianenco/oauth2-amazon         |
 | [AppID](https://github.com/Jampire/oauth2-appid)                      | composer require jampire/oauth2-appid              |
 | [Apple](https://github.com/patrickbussmann/oauth2-apple)              | composer require patrickbussmann/oauth2-apple      |
@@ -121,25 +106,25 @@ Otherwise, consider creating a [generic](#configuring-a-generic-provider) client
 Awesome! Now, you'll configure your provider. For Facebook,
 this will look something like this:
 
-```yml
-# config/packages/knpu_oauth2_client.yaml
-knpu_oauth2_client:
-    clients:
-        # the key "facebook_main" can be anything, it
-        # will create a service: "knpu.oauth2.client.facebook_main"
-        facebook_main:
-            # this will be one of the supported types
-            type: facebook
-            client_id: '%env(OAUTH_FACEBOOK_ID)%'
-            client_secret: '%env(OAUTH_FACEBOOK_SECRET)%'
-            # the route that you're redirected to after
-            # see the controller example below
-            redirect_route: connect_facebook_check
-            redirect_params: {}
-            graph_api_version: v2.12
+```php
+<?php
+// config/psr-oauth2-client.php (PHP-DI exemple)
+return [
+    'psr-oauth2-client' => DI\add([
+            'facebook_main' => [
+                'type' => 'facebook',
+                'client_id' => DI\env('OAUTH_FACEBOOK_ID'),
+                'client_secret' => DI\env('OAUTH_FACEBOOK_SECRET'),
+                'redirect_route' => 'connect_facebook_check',
+                'redirect_params' => [],
+                'graph_api_version' => 'v2.12'
+            ]
+        ]
+    )
+];
 ```
 
-Notice the two `'%env(var)%'`calls? Add these anywhere in your `.env` and `.env.dist` files.
+Notice the two `'DI\env(var)'`calls? Add these anywhere in your `.env` and `.env.dist` files.
 These are the credentials for the OAuth provider. For Facebook, you'll get these by registering
 your app on [developers.facebook.com](https://developers.facebook.com/apps/):
 
@@ -172,11 +157,9 @@ namespace App\Controller;
 
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Psr\Http\Message\ServerRequestInterface;
 
-class FacebookController extends AbstractController
+class FacebookController
 {
     /**
      * Link to this controller to start the "connect" process
@@ -189,7 +172,7 @@ class FacebookController extends AbstractController
 
         // will redirect to Facebook!
         return $clientRegistry
-            ->getClient('facebook_main') // key used in config/packages/knpu_oauth2_client.yaml
+            ->getClient('facebook_main') // key used in config/psr_oauth2_client.php
             ->redirect([
                 'public_profile', 'email' // the scopes you want to access
             ]);
@@ -202,7 +185,7 @@ class FacebookController extends AbstractController
      *
      * @Route("/connect/facebook/check", name="connect_facebook_check")
      */
-    public function connectCheckAction(Request $request, ClientRegistry $clientRegistry)
+    public function connectCheckAction(ServerRequestInterface $request, ClientRegistry $clientRegistry)
     {
         // ** if you want to *authenticate* the user, then
         // leave this method blank and create a Guard authenticator
@@ -214,7 +197,7 @@ class FacebookController extends AbstractController
         try {
             // the exact class depends on which provider you're using
             /** @var \League\OAuth2\Client\Provider\FacebookUser $user */
-            $user = $client->fetchUser();
+            $user = $client->fetchUser($request);
 
             // do something with all this new power!
             // e.g. $name = $user->getFirstName();
@@ -236,10 +219,10 @@ to fetch the user, the access token, or other things:
 
 ```php
 // get the user directly
-$user = $client->fetchUser();
+$user = $client->fetchUser($request);
 
 // OR: get the access token and then user
-$accessToken = $client->getAccessToken();
+$accessToken = $client->getAccessToken($request);
 $user = $client->fetchUserFromToken($accessToken);
 
 // access the underlying "provider" from league/oauth2-client

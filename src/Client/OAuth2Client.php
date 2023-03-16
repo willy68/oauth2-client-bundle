@@ -14,31 +14,29 @@ use KnpU\OAuth2ClientBundle\Exception\InvalidStateException;
 use KnpU\OAuth2ClientBundle\Exception\MissingAuthorizationCodeException;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Mezzio\Session\SessionInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class OAuth2Client implements OAuth2ClientInterface
 {
     public const OAUTH2_SESSION_STATE_KEY = 'knpu.oauth2_client_state';
 
-    /** @var AbstractProvider */
-    private $provider;
+    private AbstractProvider $provider;
 
-    /** @var RequestStack */
-    private $requestStack;
-
-    /** @var bool */
-    private $isStateless = false;
+    private bool $isStateless = false;
+    private ResponseFactoryInterface $responseFactory;
 
     /**
      * OAuth2Client constructor.
      */
-    public function __construct(AbstractProvider $provider, RequestStack $requestStack)
+    public function __construct(AbstractProvider $provider, ResponseFactoryInterface $responseFactory)
     {
         $this->provider = $provider;
-        $this->requestStack = $requestStack;
+        $this->responseFactory = $responseFactory;
     }
 
     /**
@@ -53,14 +51,15 @@ class OAuth2Client implements OAuth2ClientInterface
      * Creates a RedirectResponse that will send the user to the
      * OAuth2 server (e.g. send them to Facebook).
      *
-     * @param array $scopes  The scopes you want (leave empty to use default)
+     * @param ServerRequestInterface $request
+     * @param array $scopes The scopes you want (leave empty to use default)
      * @param array $options Extra options to pass to the Provider's getAuthorizationUrl()
      *                       method. For example, <code>scope</code> is a common option.
      *                       Generally, these become query parameters when redirecting.
      *
-     * @return RedirectResponse
+     * @return ResponseInterface
      */
-    public function redirect(array $scopes = [], array $options = [])
+    public function redirect(ServerRequestInterface $request, array $scopes, array $options): ResponseInterface
     {
         if (!empty($scopes)) {
             $options['scope'] = $scopes;
@@ -70,37 +69,37 @@ class OAuth2Client implements OAuth2ClientInterface
 
         // set the state (unless we're stateless)
         if (!$this->isStateless()) {
-            $this->getSession()->set(
+            $this->getSession($request)->set(
                 self::OAUTH2_SESSION_STATE_KEY,
                 $this->provider->getState()
             );
         }
 
-        return new RedirectResponse($url);
+        return ($this->responseFactory->createResponse())
+            ->withAddedHeader("Location", $url);
     }
 
     /**
      * Call this after the user is redirected back to get the access token.
      *
+     * @param ServerRequestInterface $request
      * @param array $options Additional options that should be passed to the getAccessToken() of the underlying provider
      *
-     * @return AccessToken|\League\OAuth2\Client\Token\AccessTokenInterface
+     * @return AccessToken
      *
-     * @throws InvalidStateException
-     * @throws MissingAuthorizationCodeException
-     * @throws IdentityProviderException         If token cannot be fetched
+     * @throws IdentityProviderException If token cannot be fetched
      */
-    public function getAccessToken(array $options = [])
+    public function getAccessToken(ServerRequestInterface $request, array $options = []): AccessToken
     {
         if (!$this->isStateless()) {
-            $expectedState = $this->getSession()->get(self::OAUTH2_SESSION_STATE_KEY);
-            $actualState = $this->getCurrentRequest()->get('state');
+            $expectedState = $this->getSession($request)->get(self::OAUTH2_SESSION_STATE_KEY);
+            $actualState = ($request->getQueryParams()['state']) ?? null;
             if (!$actualState || ($actualState !== $expectedState)) {
                 throw new InvalidStateException('Invalid state');
             }
         }
 
-        $code = $this->getCurrentRequest()->get('code');
+        $code = ($request->getQueryParams()['code']) ?? null;
 
         if (!$code) {
             throw new MissingAuthorizationCodeException('No "code" parameter was found (usually this is a query parameter)!');
@@ -115,13 +114,14 @@ class OAuth2Client implements OAuth2ClientInterface
     /**
      * Get a new AccessToken from a refresh token.
      *
+     * @param string $refreshToken
      * @param array $options Additional options that should be passed to the getAccessToken() of the underlying provider
      *
-     * @return AccessToken|\League\OAuth2\Client\Token\AccessTokenInterface
+     * @return AccessToken
      *
      * @throws IdentityProviderException If token cannot be fetched
      */
-    public function refreshAccessToken(string $refreshToken, array $options = [])
+    public function refreshAccessToken(string $refreshToken, array $options = []): AccessToken
     {
         return $this->provider->getAccessToken(
             'refresh_token',
@@ -132,9 +132,10 @@ class OAuth2Client implements OAuth2ClientInterface
     /**
      * Returns the "User" information (called a resource owner).
      *
-     * @return \League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @param AccessToken $accessToken
+     * @return ResourceOwnerInterface
      */
-    public function fetchUserFromToken(AccessToken $accessToken)
+    public function fetchUserFromToken(AccessToken $accessToken): ResourceOwnerInterface
     {
         return $this->provider->getResourceOwner($accessToken);
     }
@@ -145,12 +146,13 @@ class OAuth2Client implements OAuth2ClientInterface
      * Only use this if you don't need the access token, but only
      * need the user.
      *
-     * @return \League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @param ServerRequestInterface $request
+     * @return ResourceOwnerInterface
+     * @throws IdentityProviderException
      */
-    public function fetchUser()
+    public function fetchUser(ServerRequestInterface $request): ResourceOwnerInterface
     {
-        /** @var AccessToken $token */
-        $token = $this->getAccessToken();
+        $token = $this->getAccessToken($request);
 
         return $this->fetchUserFromToken($token);
     }
@@ -160,7 +162,7 @@ class OAuth2Client implements OAuth2ClientInterface
      *
      * @return AbstractProvider
      */
-    public function getOAuth2Provider()
+    public function getOAuth2Provider(): AbstractProvider
     {
         return $this->provider;
     }
@@ -171,28 +173,16 @@ class OAuth2Client implements OAuth2ClientInterface
     }
 
     /**
-     * @return \Symfony\Component\HttpFoundation\Request
-     */
-    private function getCurrentRequest()
-    {
-        $request = $this->requestStack->getCurrentRequest();
-
-        if (!$request) {
-            throw new \LogicException('There is no "current request", and it is needed to perform this action');
-        }
-
-        return $request;
-    }
-
-    /**
+     * Attempt session in attribute
+     * @param ServerRequestInterface $request
      * @return SessionInterface
      */
-    private function getSession()
+    private function getSession(ServerRequestInterface $request): SessionInterface
     {
-        if (!$this->getCurrentRequest()->hasSession()) {
+        if (!($session = $request->getAttribute(SessionInterface::class))) {
             throw new \LogicException('In order to use "state", you must have a session. Set the OAuth2Client to stateless to avoid state');
         }
 
-        return $this->getCurrentRequest()->getSession();
+        return $session;
     }
 }

@@ -10,10 +10,18 @@
 
 namespace KnpU\OAuth2ClientBundle\Client;
 
+use KnpU\OAuth2ClientBundle\Exception\InvalidStateException;
+use KnpU\OAuth2ClientBundle\Exception\MissingAuthorizationCodeException;
+use League\OAuth2\Client\Provider\AbstractProvider;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * @method AccessToken refreshAccessToken(string $refreshToken, array $options = []) Get a new AccessToken from a refresh token., passing options to the underlying provider
+ * Get a new AccessToken from a refresh token., passing options to the underlying provider
+ * @method AccessToken refreshAccessToken(string $refreshToken, array $options = [])
  */
 interface OAuth2ClientInterface
 {
@@ -26,34 +34,36 @@ interface OAuth2ClientInterface
      * Creates a RedirectResponse that will send the user to the
      * OAuth2 server (e.g. send them to Facebook).
      *
-     * @param array $scopes  The scopes you want (leave empty to use default)
+     * @param ServerRequestInterface $request
+     * @param array $scopes The scopes you want (leave empty to use default)
      * @param array $options Extra options to pass to the Provider's getAuthorizationUrl()
      *                       method. For example, <code>scope</code> is a common option.
      *                       Generally, these become query parameters when redirecting.
-     *
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return ResponseInterface
      */
-    public function redirect(array $scopes, array $options);
+    public function redirect(ServerRequestInterface $request ,array $scopes, array $options): ResponseInterface;
 
     /**
      * Call this after the user is redirected back to get the access token.
      *
+     * @param ServerRequestInterface $request
      * @param array $options Additional options that should be passed to the getAccessToken() of the underlying provider
      *
-     * @return \League\OAuth2\Client\Token\AccessToken
+     * @return AccessToken
      *
-     * @throws \KnpU\OAuth2ClientBundle\Exception\InvalidStateException
-     * @throws \KnpU\OAuth2ClientBundle\Exception\MissingAuthorizationCodeException
-     * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException   If token cannot be fetched
+     * @throws InvalidStateException
+     * @throws MissingAuthorizationCodeException
+     * @throws IdentityProviderException If token cannot be fetched
      */
-    public function getAccessToken(array $options = []);
+    public function getAccessToken(ServerRequestInterface $request ,array $options = []): AccessToken;
 
     /**
      * Returns the "User" information (called a resource owner).
      *
-     * @return \League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @param AccessToken $accessToken
+     * @return ResourceOwnerInterface
      */
-    public function fetchUserFromToken(AccessToken $accessToken);
+    public function fetchUserFromToken(AccessToken $accessToken): ResourceOwnerInterface;
 
     /**
      * Shortcut to fetch the access token and user all at once.
@@ -61,14 +71,15 @@ interface OAuth2ClientInterface
      * Only use this if you don't need the access token, but only
      * need the user.
      *
-     * @return \League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @param ServerRequestInterface $request
+     * @return ResourceOwnerInterface
      */
-    public function fetchUser();
+    public function fetchUser(ServerRequestInterface $request): ResourceOwnerInterface;
 
     /**
      * Returns the underlying OAuth2 provider.
      *
-     * @return \League\OAuth2\Client\Provider\AbstractProvider
+     * @return AbstractProvider
      */
-    public function getOAuth2Provider();
+    public function getOAuth2Provider(): AbstractProvider;
 }

@@ -11,24 +11,29 @@
 namespace KnpU\OAuth2ClientBundle\Client\Provider;
 
 use KnpU\OAuth2ClientBundle\Client\OAuth2Client;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\FacebookUser;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use Psr\Http\Message\ServerRequestInterface;
 
 class FacebookClient extends OAuth2Client
 {
     /**
-     * @return FacebookUser|\League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @return FacebookUser|ResourceOwnerInterface
      */
-    public function fetchUserFromToken(AccessToken $accessToken)
+    public function fetchUserFromToken(AccessToken $accessToken): FacebookUser|ResourceOwnerInterface
     {
         return parent::fetchUserFromToken($accessToken);
     }
 
     /**
-     * @return FacebookUser|\League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @param ServerRequestInterface $request
+     * @return FacebookUser|ResourceOwnerInterface
+     * @throws IdentityProviderException
      */
-    public function fetchUser()
+    public function fetchUser(ServerRequestInterface $request): FacebookUser|ResourceOwnerInterface
     {
-        return parent::fetchUser();
+        return parent::fetchUser($request);
     }
 }

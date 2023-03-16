@@ -20,7 +20,7 @@ return [
             'clientId' => env('OAUTH_FACEBOOK_ID'),
             'clientSecret' => env('OAUTH_FACEBOOK_SECRET'),
             'redirectUri' => 'connect_facebook_check',
-            'redirect_params' => [],
+            'redirectParams' => [],
             'graphApiVersion' => 'v2.12',
         ]
     ),

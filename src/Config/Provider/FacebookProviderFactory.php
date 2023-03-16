@@ -27,10 +27,13 @@ class FacebookProviderFactory
             $router = $c->get(FastRouteRouter::class);
             $redirectUri = $router->generateUri($options['redirectUri']);
             $request = new ServerRequest('GET', $redirectUri);
-            $url = $request->getUri()->getScheme() . '://' .
-                $request->getUri()->getHost() .
-                $request->getUri()->getPort() ? ':' . $request->getUri()->getPort() : '' .
-                $redirectUri;
+            $url = sprintf(
+                '%s://%s%s%s',
+                $request->getUri()->getScheme(),
+                $request->getUri()->getHost(),
+                $request->getUri()->getPort() ? ':' . $request->getUri()->getPort() : '',
+                $redirectUri
+            );
             $options['redirectUri'] = $url;
         }
         return new Facebook($options);

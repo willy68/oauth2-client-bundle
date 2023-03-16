@@ -26,7 +26,7 @@ class FacebookProviderFactory
             /** @var RouterInterface $router */
             $router = $c->get(FastRouteRouter::class);
             $redirectUri = $router->generateUri($options['redirectUri']);
-            $request = new ServerRequest('GET', $redirectUri);
+            $request = ServerRequest::fromGlobals();
             $url = sprintf(
                 '%s://%s%s%s',
                 $request->getUri()->getScheme(),

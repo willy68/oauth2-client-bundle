@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: "actions/checkout@v2"
+        uses: "actions/checkout@v3"
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
@@ -37,7 +37,7 @@ jobs:
             php-version: "${{ matrix.php-version }}"
 
       - name: "Composer install"
-        uses: "ramsey/composer-install@v1"
+        uses: "ramsey/composer-install@v2"
         with:
             dependency-versions: "${{ matrix.dependency-versions }}"
             composer-options: "--prefer-dist --no-progress"

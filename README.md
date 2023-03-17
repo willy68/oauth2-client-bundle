@@ -103,6 +103,8 @@ Otherwise, consider creating a [generic](#configuring-a-generic-provider) client
 
 ### Step 2) Configure the Provider
 
+Config dir is for exemple purpose only.
+
 Awesome! Now, you'll configure your provider. For Facebook,
 this will look something like this:
 

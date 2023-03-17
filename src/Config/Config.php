@@ -8,6 +8,7 @@ use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Config\Client\FacebookClientFactory;
 use KnpU\OAuth2ClientBundle\Config\Provider\FacebookProviderFactory;
 use Psr\Container\ContainerInterface;
+
 use function DI\add;
 use function DI\env;
 use function DI\factory;
@@ -22,8 +23,7 @@ return [
             'redirectUri' => 'https://localhost:8000/connect/facebook/check',
             'redirectParams' => [],
             'graphApiVersion' => 'v2.12',
-        ]
-    ),
+        ]),
     'facebook.provider' => factory(FacebookProviderFactory::class),
     'psr.oauth2.clients' => add([
         'facebook' => factory(FacebookClientFactory::class),

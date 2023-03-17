@@ -42,7 +42,7 @@ interface OAuth2ClientInterface
      *                       Generally, these become query parameters when redirecting.
      * @return ResponseInterface
      */
-    public function redirect(ServerRequestInterface $request ,array $scopes, array $options): ResponseInterface;
+    public function redirect(ServerRequestInterface $request, array $scopes, array $options): ResponseInterface;
 
     /**
      * Call this after the user is redirected back to get the access token.
@@ -56,7 +56,7 @@ interface OAuth2ClientInterface
      * @throws MissingAuthorizationCodeException
      * @throws IdentityProviderException If token cannot be fetched
      */
-    public function getAccessToken(ServerRequestInterface $request ,array $options = []): AccessTokenInterface;
+    public function getAccessToken(ServerRequestInterface $request, array $options = []): AccessTokenInterface;
 
     /**
      * Returns the "User" information (called a resource owner).

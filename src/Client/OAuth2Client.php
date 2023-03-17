@@ -63,8 +63,11 @@ class OAuth2Client implements OAuth2ClientInterface
      *
      * @return ResponseInterface
      */
-    public function redirect(ServerRequestInterface $request, array $scopes = [], array $options = []): ResponseInterface
-    {
+    public function redirect(
+        ServerRequestInterface $request,
+        array $scopes = [],
+        array $options = []
+    ): ResponseInterface {
         if (!empty($scopes)) {
             $options['scope'] = $scopes;
         }
@@ -106,7 +109,9 @@ class OAuth2Client implements OAuth2ClientInterface
         $code = ($request->getQueryParams()['code']) ?? null;
 
         if (!$code) {
-            throw new MissingAuthorizationCodeException('No "code" parameter was found (usually this is a query parameter)!');
+            throw new MissingAuthorizationCodeException(
+                'No "code" parameter was found (usually this is a query parameter)!'
+            );
         }
 
         return $this->provider->getAccessToken(
@@ -125,8 +130,10 @@ class OAuth2Client implements OAuth2ClientInterface
      *
      * @throws IdentityProviderException If token cannot be fetched
      */
-    public function refreshAccessToken(string $refreshToken, array $options = []): AccessToken|AccessTokenInterface
-    {
+    public function refreshAccessToken(
+        string $refreshToken,
+        array $options = []
+    ): AccessToken|AccessTokenInterface {
         return $this->provider->getAccessToken(
             'refresh_token',
             array_merge(['refresh_token' => $refreshToken], $options)
@@ -185,7 +192,10 @@ class OAuth2Client implements OAuth2ClientInterface
     private function getSession(ServerRequestInterface $request): object
     {
         if (!($session = $request->getAttribute($this->sessionClass))) {
-            throw new LogicException('In order to use "state", you must have a session. Set the OAuth2Client to stateless to avoid state');
+            throw new LogicException(
+                'In order to use "state", you must have a session.' .
+                ' Set the OAuth2Client to stateless to avoid state'
+            );
         }
 
         return $session;

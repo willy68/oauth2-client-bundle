@@ -1,4 +1,4 @@
-# OAuth / Social Integration for Symfony: KnpUOAuth2ClientBundle
+# OAuth / Social Integration with psr compatibility
 
 Easily integrate with an OAuth2 server (e.g. Facebook, GitHub) for:
 
@@ -6,11 +6,11 @@ Easily integrate with an OAuth2 server (e.g. Facebook, GitHub) for:
 * "Connect with Facebook" type of functionality
 * Fetching access keys via OAuth2 to be used with an API
 
-This bundle integrates with [league/oauth2-client](https://oauth2-client.thephpleague.com/).
+This library integrates with [league/oauth2-client](https://oauth2-client.thephpleague.com/).
 
-## This Bundle?
+## This Library?
 
-The `knpuniversity/psr-oauth2-client`, takes more work to setup, but gives you
+The `willy68/psr-oauth2-client`, takes more work to setup, but gives you
 more low-level control.
 
 ## Installation

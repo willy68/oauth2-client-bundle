@@ -16,6 +16,7 @@ use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use League\OAuth2\Client\Token\AccessTokenInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -49,13 +50,13 @@ interface OAuth2ClientInterface
      * @param ServerRequestInterface $request
      * @param array $options Additional options that should be passed to the getAccessToken() of the underlying provider
      *
-     * @return AccessToken
+     * @return AccessTokenInterface
      *
      * @throws InvalidStateException
      * @throws MissingAuthorizationCodeException
      * @throws IdentityProviderException If token cannot be fetched
      */
-    public function getAccessToken(ServerRequestInterface $request ,array $options = []): AccessToken;
+    public function getAccessToken(ServerRequestInterface $request ,array $options = []): AccessTokenInterface;
 
     /**
      * Returns the "User" information (called a resource owner).

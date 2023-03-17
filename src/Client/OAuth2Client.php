@@ -86,11 +86,11 @@ class OAuth2Client implements OAuth2ClientInterface
      * @param ServerRequestInterface $request
      * @param array $options Additional options that should be passed to the getAccessToken() of the underlying provider
      *
-     * @return AccessToken
+     * @return AccessTokenInterface
      *
      * @throws IdentityProviderException If token cannot be fetched
      */
-    public function getAccessToken(ServerRequestInterface $request, array $options = []): AccessToken
+    public function getAccessToken(ServerRequestInterface $request, array $options = []): AccessTokenInterface
     {
         if (!$this->isStateless()) {
             $expectedState = $this->getSession($request)->get(self::OAUTH2_SESSION_STATE_KEY);
@@ -153,6 +153,7 @@ class OAuth2Client implements OAuth2ClientInterface
      */
     public function fetchUser(ServerRequestInterface $request)
     {
+        /** @var AccessToken $token */
         $token = $this->getAccessToken($request);
 
         return $this->fetchUserFromToken($token);

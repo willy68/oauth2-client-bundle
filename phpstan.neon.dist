@@ -3,5 +3,6 @@ parameters:
 	inferPrivatePropertyTypeFromConstructor: true
 	paths:
 		- ./src/
-	excludes_analyse:
+	excludePaths:
 		- */cache/*
+		- ./src/Security

@@ -38,6 +38,6 @@
         "phpstan/phpstan": "^1.10.1"
     },
     "scripts": {
-        "test": "simple-phpunit && phpstan analyze"
+        "test": "phpunit && phpstan analyze"
     }
 }

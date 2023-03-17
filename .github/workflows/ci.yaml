@@ -7,7 +7,7 @@ jobs:
 
   tests:
     name: "Tests ${{ matrix.php-version }} ${{ matrix.dependency-versions }} deps ${{ matrix.dependency-versions }}"
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false

@@ -10,7 +10,7 @@ This bundle integrates with [league/oauth2-client](https://oauth2-client.thephpl
 
 ## This Bundle?
 
-The `knpuniversity/oauth2-client-bundle`, takes more work to setup, but gives you
+The `knpuniversity/psr-oauth2-client`, takes more work to setup, but gives you
 more low-level control.
 
 ## Installation
@@ -170,7 +170,7 @@ used to communicate with the OAuth2 server.
 
 To start the OAuth process, you'll need to create a route and
 controller that redirects to Facebook. Because we used the
-key `facebook_main` above, you can simply:
+key `facebook` above, you can simply:
 
 ```php
 namespace App\Controller;
@@ -188,11 +188,10 @@ class FacebookController
      */
     public function connectAction(ClientRegistry $clientRegistry)
     {
-        // on Symfony 3.3 or lower, $clientRegistry = $this->get('knpu.oauth2.registry');
 
         // will redirect to Facebook!
         return $clientRegistry
-            ->getClient('facebook_main') // key used in config/psr_oauth2_client.php
+            ->getClient('facebook') // key used in Config/Config.php
             ->redirect([
                 'public_profile', 'email' // the scopes you want to access
             ]);
@@ -212,7 +211,7 @@ class FacebookController
         // (read below)
 
         /** @var \KnpU\OAuth2ClientBundle\Client\Provider\FacebookClient $client */
-        $client = $clientRegistry->getClient('facebook_main');
+        $client = $clientRegistry->getClient('facebook');
 
         try {
             // the exact class depends on which provider you're using
@@ -251,7 +250,7 @@ $provider = $client->getOAuth2Provider();
 $longLivedToken = $provider->getLongLivedAccessToken($accessToken);
 ```
 
-## Authenticating with the new Symfony Authenticator
+## Authenticating with the new Symfony Authenticator (not with this fork)
 
 At this point, you now have a nice service that allows you to
 redirect your user to an OAuth server (e.g. Facebook) and fetch

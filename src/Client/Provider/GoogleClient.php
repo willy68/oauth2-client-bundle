@@ -22,7 +22,7 @@ class GoogleClient extends OAuth2Client
     /**
      * @return GoogleUser|ResourceOwnerInterface
      */
-    public function fetchUserFromToken(AccessToken $accessToken): GoogleUser|ResourceOwnerInterface
+    public function fetchUserFromToken(AccessToken $accessToken)
     {
         return parent::fetchUserFromToken($accessToken);
     }
@@ -31,7 +31,7 @@ class GoogleClient extends OAuth2Client
      * @return GoogleUser|ResourceOwnerInterface
      * @throws IdentityProviderException
      */
-    public function fetchUser(ServerRequestInterface $request): GoogleUser|ResourceOwnerInterface
+    public function fetchUser(ServerRequestInterface $request)
     {
         return parent::fetchUser($request);
     }

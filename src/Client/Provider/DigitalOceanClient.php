@@ -13,6 +13,7 @@ namespace KnpU\OAuth2ClientBundle\Client\Provider;
 use ChrisHemmings\OAuth2\Client\Provider\DigitalOceanResourceOwner;
 use KnpU\OAuth2ClientBundle\Client\OAuth2Client;
 use League\OAuth2\Client\Token\AccessToken;
+use Psr\Http\Message\ServerRequestInterface;
 
 class DigitalOceanClient extends OAuth2Client
 {
@@ -27,8 +28,8 @@ class DigitalOceanClient extends OAuth2Client
     /**
      * @return DigitalOceanResourceOwner|\League\OAuth2\Client\Provider\ResourceOwnerInterface
      */
-    public function fetchUser()
+    public function fetchUser(ServerRequestInterface $request)
     {
-        return parent::fetchUser();
+        return parent::fetchUser($request);
     }
 }

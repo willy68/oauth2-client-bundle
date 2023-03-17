@@ -15,7 +15,10 @@ use KnpU\OAuth2ClientBundle\Client\OAuth2Client;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use Mezzio\Session\Session;
+use Mezzio\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 
 class BatchProviderTest extends TestCase
 {
@@ -25,6 +28,14 @@ class BatchProviderTest extends TestCase
 
         $mockAccessToken = $this->getMockBuilder(AccessToken::class)->disableOriginalConstructor()->getMock();
         $mockProvider = $this->getMockProvider($mockAccessToken);
+        $mockRequest = $this->createMock(ServerRequestInterface::class);
+        $session = new Session([],'1');
+        $mockRequest
+            ->method('getQueryParams')
+            ->willReturn(['state' => 'THE_STATE', 'code' => 'CODE_ABC']);
+        $mockRequest->method('getAttribute')
+            ->with(SessionInterface::class)
+            ->willReturn($session);
 
         $clients = scandir(__DIR__ . "/../../../src/Client/Provider");
         foreach($clients as $client) {
@@ -36,7 +47,7 @@ class BatchProviderTest extends TestCase
             $this->assertTrue(is_subclass_of($testClient, OAuth2Client::class));
 
             $this->assertInstanceOf(ResourceOwnerInterface::class, $testClient->fetchUserFromToken($mockAccessToken));
-            $this->assertInstanceOf(ResourceOwnerInterface::class, $testClient->fetchUser());
+            $this->assertInstanceOf(ResourceOwnerInterface::class, $testClient->fetchUser($mockRequest));
         }
     }
 

@@ -13,6 +13,7 @@ namespace KnpU\OAuth2ClientBundle\Client\Provider;
 use Evelabs\OAuth2\Client\Provider\EveOnlineResourceOwner;
 use KnpU\OAuth2ClientBundle\Client\OAuth2Client;
 use League\OAuth2\Client\Token\AccessToken;
+use Psr\Http\Message\ServerRequestInterface;
 
 class EveOnlineClient extends OAuth2Client
 {
@@ -27,8 +28,8 @@ class EveOnlineClient extends OAuth2Client
     /**
      * @return EveOnlineResourceOwner|\League\OAuth2\Client\Provider\ResourceOwnerInterface
      */
-    public function fetchUser()
+    public function fetchUser(ServerRequestInterface $request)
     {
-        return parent::fetchUser();
+        return parent::fetchUser($request);
     }
 }

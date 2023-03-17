@@ -14,6 +14,7 @@ use Buddy\OAuth2\Client\Provider\BuddyResourceOwner;
 use KnpU\OAuth2ClientBundle\Client\OAuth2Client;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use Psr\Http\Message\ServerRequestInterface;
 
 class BuddyClient extends OAuth2Client
 {
@@ -28,8 +29,8 @@ class BuddyClient extends OAuth2Client
     /**
      * @return BuddyResourceOwner|ResourceOwnerInterface
      */
-    public function fetchUser()
+    public function fetchUser(ServerRequestInterface $request)
     {
-        return parent::fetchUser();
+        return parent::fetchUser($request);
     }
 }

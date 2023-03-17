@@ -64,7 +64,7 @@ interface OAuth2ClientInterface
      * @param AccessToken $accessToken
      * @return ResourceOwnerInterface
      */
-    public function fetchUserFromToken(AccessToken $accessToken): ResourceOwnerInterface;
+    public function fetchUserFromToken(AccessToken $accessToken);
 
     /**
      * Shortcut to fetch the access token and user all at once.
@@ -75,7 +75,7 @@ interface OAuth2ClientInterface
      * @param ServerRequestInterface $request
      * @return ResourceOwnerInterface
      */
-    public function fetchUser(ServerRequestInterface $request): ResourceOwnerInterface;
+    public function fetchUser(ServerRequestInterface $request);
 
     /**
      * Returns the underlying OAuth2 provider.

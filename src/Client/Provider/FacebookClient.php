@@ -22,7 +22,7 @@ class FacebookClient extends OAuth2Client
     /**
      * @return FacebookUser|ResourceOwnerInterface
      */
-    public function fetchUserFromToken(AccessToken $accessToken): FacebookUser|ResourceOwnerInterface
+    public function fetchUserFromToken(AccessToken $accessToken)
     {
         return parent::fetchUserFromToken($accessToken);
     }
@@ -32,7 +32,7 @@ class FacebookClient extends OAuth2Client
      * @return FacebookUser|ResourceOwnerInterface
      * @throws IdentityProviderException
      */
-    public function fetchUser(ServerRequestInterface $request): FacebookUser|ResourceOwnerInterface
+    public function fetchUser(ServerRequestInterface $request)
     {
         return parent::fetchUser($request);
     }

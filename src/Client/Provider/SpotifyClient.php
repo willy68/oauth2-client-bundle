@@ -14,6 +14,7 @@ use Kerox\OAuth2\Client\Provider\SpotifyResourceOwner;
 use KnpU\OAuth2ClientBundle\Client\OAuth2Client;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
+use Psr\Http\Message\ServerRequestInterface;
 
 class SpotifyClient extends OAuth2Client
 {
@@ -28,8 +29,8 @@ class SpotifyClient extends OAuth2Client
     /**
      * @return SpotifyResourceOwner|ResourceOwnerInterface
      */
-    public function fetchUser()
+    public function fetchUser(ServerRequestInterface $request)
     {
-        return parent::fetchUser();
+        return parent::fetchUser($request);
     }
 }

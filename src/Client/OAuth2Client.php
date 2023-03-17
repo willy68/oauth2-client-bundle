@@ -136,7 +136,7 @@ class OAuth2Client implements OAuth2ClientInterface
      * @param AccessToken $accessToken
      * @return ResourceOwnerInterface
      */
-    public function fetchUserFromToken(AccessToken $accessToken): ResourceOwnerInterface
+    public function fetchUserFromToken(AccessToken $accessToken)
     {
         return $this->provider->getResourceOwner($accessToken);
     }
@@ -151,7 +151,7 @@ class OAuth2Client implements OAuth2ClientInterface
      * @return ResourceOwnerInterface
      * @throws IdentityProviderException
      */
-    public function fetchUser(ServerRequestInterface $request): ResourceOwnerInterface
+    public function fetchUser(ServerRequestInterface $request)
     {
         $token = $this->getAccessToken($request);
 

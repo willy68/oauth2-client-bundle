@@ -14,9 +14,6 @@
   <testsuites>
     <testsuite name="Test suite">
       <directory suffix="Test.php">./tests</directory>
-      <exclude>
-        <directory>./tests/Client/Provider</directory>
-      </exclude>
     </testsuite>
   </testsuites>
 </phpunit>

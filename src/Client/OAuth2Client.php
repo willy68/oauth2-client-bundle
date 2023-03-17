@@ -17,7 +17,7 @@ use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
-use Mezzio\Session\SessionInterface;
+use LogicException;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,19 +25,22 @@ use Psr\Http\Message\ServerRequestInterface;
 class OAuth2Client implements OAuth2ClientInterface
 {
     public const OAUTH2_SESSION_STATE_KEY = 'knpu.oauth2_client_state';
-
     private AbstractProvider $provider;
-
     private bool $isStateless = false;
     private ResponseFactoryInterface $responseFactory;
+    private string $sessionClass;
 
     /**
      * OAuth2Client constructor.
      */
-    public function __construct(AbstractProvider $provider, ResponseFactoryInterface $responseFactory)
-    {
+    public function __construct(
+        AbstractProvider $provider,
+        ResponseFactoryInterface $responseFactory,
+        string $sessionClass
+    ) {
         $this->provider = $provider;
         $this->responseFactory = $responseFactory;
+        $this->sessionClass = $sessionClass;
     }
 
     /**
@@ -177,12 +180,12 @@ class OAuth2Client implements OAuth2ClientInterface
     /**
      * Attempt session in attribute
      * @param ServerRequestInterface $request
-     * @return SessionInterface
+     * @return object
      */
-    private function getSession(ServerRequestInterface $request): SessionInterface
+    private function getSession(ServerRequestInterface $request): object
     {
-        if (!($session = $request->getAttribute(SessionInterface::class))) {
-            throw new \LogicException('In order to use "state", you must have a session. Set the OAuth2Client to stateless to avoid state');
+        if (!($session = $request->getAttribute($this->sessionClass))) {
+            throw new LogicException('In order to use "state", you must have a session. Set the OAuth2Client to stateless to avoid state');
         }
 
         return $session;

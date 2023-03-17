@@ -52,7 +52,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
 
 
@@ -79,7 +80,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $client->setAsStateless();
 
@@ -106,7 +108,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $client->setAsStateless();
 
@@ -141,7 +144,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $this->assertSame($expectedToken, $client->getAccessToken($this->serverRequest));
     }
@@ -164,7 +168,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $actualToken = $client->getAccessToken($this->serverRequest, ['redirectUri' => 'https://some.url']);
         $this->assertSame($expectedToken, $actualToken);
@@ -186,7 +191,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $client->setAsStateless();
         $this->assertSame($expectedToken, $client->getAccessToken($this->serverRequest));
@@ -206,7 +212,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $actualToken = $client->refreshAccessToken($existingToken->getRefreshToken());
         $this->assertSame($expectedToken, $actualToken);
@@ -226,7 +233,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $actualToken = $client->refreshAccessToken($existingToken->getRefreshToken(), ['redirect_uri' => 'https://some.url']);
         $this->assertSame($expectedToken, $actualToken);
@@ -245,7 +253,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $client->getAccessToken($this->serverRequest);
     }
@@ -264,7 +273,8 @@ class OAuth2ClientTest extends TestCase
         // don't set a code query parameter
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
         $client->getAccessToken($this->serverRequest);
     }
@@ -285,7 +295,8 @@ class OAuth2ClientTest extends TestCase
 
         $client = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
 
         $client->setAsStateless();
@@ -312,7 +323,8 @@ class OAuth2ClientTest extends TestCase
     {
         $testClient = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
 
         $result = $testClient->getOAuth2Provider();
@@ -325,9 +337,10 @@ class OAuth2ClientTest extends TestCase
         $this->serverRequest->method('getAttribute')
             ->with(SessionInterface::class)
             ->willReturn(null);
-        $testClient = new OAuth2Client(
+        $testClient= new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
 
         $this->expectException(\LogicException::class);
@@ -341,7 +354,8 @@ class OAuth2ClientTest extends TestCase
             ->willReturn(null);
         $testClient = new OAuth2Client(
             $this->provider,
-            $this->httpFactory
+            $this->httpFactory,
+            SessionInterface::class
         );
 
         $this->expectException(\LogicException::class);

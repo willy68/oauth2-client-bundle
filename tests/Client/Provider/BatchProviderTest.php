@@ -42,7 +42,7 @@ class BatchProviderTest extends TestCase
             if(!str_ends_with($client, ".php")) { continue; }
 
             $client = sprintf("KnpU\OAuth2ClientBundle\Client\Provider\%s", explode(".", $client)[0]);
-            $testClient = new $client($mockProvider, new HttpFactory());
+            $testClient = new $client($mockProvider, new HttpFactory(), SessionInterface::class);
             $testClient->setAsStateless();
             $this->assertTrue(is_subclass_of($testClient, OAuth2Client::class));
 

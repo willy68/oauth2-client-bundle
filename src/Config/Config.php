@@ -19,7 +19,7 @@ return [
     'facebook.options' => add([
             'clientId' => env('OAUTH_FACEBOOK_ID'),
             'clientSecret' => env('OAUTH_FACEBOOK_SECRET'),
-            'redirectUri' => 'connect_facebook_check',
+            'redirectUri' => 'https://localhost:8000/connect/facebook/check',
             'redirectParams' => [],
             'graphApiVersion' => 'v2.12',
         ]

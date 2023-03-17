@@ -10,8 +10,9 @@ $finder = (new \PhpCsFixer\Finder())
 
 return (new \PhpCsFixer\Config())
     ->setRules(array(
-        '@Symfony' => true,
-        '@Symfony:risky' => true,
+        '@PSR12' => true,
+        '@PSR12:risky' => true,
+        'yoda_style' => false,
         'header_comment' => [
             'header' => <<<EOF
 OAuth2 Client Bundle
@@ -22,6 +23,5 @@ file that was distributed with this source code.
 EOF
         ]
     ))
-    ->setRiskyAllowed(true)
     ->setFinder($finder)
 ;
